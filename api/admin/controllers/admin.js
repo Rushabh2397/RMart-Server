@@ -1,8 +1,5 @@
-const async = require('async');
-const { User } = require('../../../models');
-const { validationResult } = require('express-validator');
-const { decrypt } = require('../../../utils/encryDecry')
-const jwt = require('jsonwebtoken')
+const { Admin } = require('../../../models');
+
 
 module.exports = {
 
@@ -19,7 +16,7 @@ module.exports = {
                 nextCall(null, req.body)
             },
             (body, nextCall) => {
-                User.findOne({ email: body.email }, (err, user) => {
+                Admin.findOne({ email: body.email }, (err, user) => {
                     if (err) {
                         return nextCall(err)
                     } else if (user) {
@@ -31,7 +28,7 @@ module.exports = {
                     }
                 })
             },
-            (body, nextCall) => {
+            (body, nextCall) =>{
                 let newUser = new User(body);
                 newUser.save((err, user) => {
                     if (err) {
@@ -49,7 +46,7 @@ module.exports = {
 
             res.json({
                 status: 'success',
-                message: 'User registerd successfuly.'
+                message: 'User registered successfuly.'
             })
         })
     },
@@ -67,7 +64,7 @@ module.exports = {
                 nextCall(null, req.body)
             },
             (body, nextCall) => {
-                User.findOne({ email: body.email }, (err, user) => {
+                Admin.findOne({ email: body.email }, (err, user) => {
                     if (err) {
                         return nextCall(err)
                     } else if (!user) {
@@ -93,7 +90,7 @@ module.exports = {
                 }
                 user = user.toJSON();
                 user.accessToken = jwt.sign(jwtPayload, 'secret', {
-                    expiresIn : 60 * 60 * 24
+                    expiresIn: 60 * 60 * 24
                 })
                 delete user.password;
                 nextCall(null, user)
@@ -112,4 +109,5 @@ module.exports = {
             })
         })
     }
+
 }
