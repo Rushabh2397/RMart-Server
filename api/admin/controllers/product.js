@@ -10,13 +10,11 @@ module.exports = {
      * @param {name,price,description,image} req 
     */
     addProduct: (req, res) => {
-        console.log("Inside add product.")
         async.waterfall([
             (nextCall) => {
                 Uploader.getFormFileds(req, nextCall)
             },
             (fields, files, nextCall) => {
-                console.log("here....")
                 if (Object.keys(files).length === 0) {
                     return nextCall({
                         message: 'Missing parameter.'

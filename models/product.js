@@ -17,6 +17,9 @@ const productSchema = new Schema({
     image: {
         type: String
     },
+    brand: {
+        type: String
+    },
     created_at: {
         type: Date
     },
