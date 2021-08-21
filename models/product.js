@@ -23,6 +23,10 @@ const productSchema = new Schema({
     created_at: {
         type: Date
     },
+    type :{
+        type: String,
+        enum : ['Male','Female','Unisex']
+    },
     updated_at: {
         type: Date
     }

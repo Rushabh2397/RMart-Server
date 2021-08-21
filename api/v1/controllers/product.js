@@ -1,24 +1,74 @@
 const { Product } = require('../../../models')
 const async = require('async')
+const config = require('../../../config')
 
 
 module.exports = {
 
     getAllProducts: (req, res) => {
+
         async.waterfall([
             (nextCall) => {
-                Product.find({}, (err, products) => {
+                let filter = req.body.filter;
+                let applyFilter = {};
+                let sort = {};
+                let aggregateQuery = [];
+                if (filter) {
+                    if (filter.brands.length > 0) {
+                        applyFilter.brand = { $in: filter.brands }
+                    }
+
+                    if (filter.gender.length > 0) {
+                        applyFilter.type = { $in: filter.gender }
+                    }
+
+                    if (filter.range.length > 0) {
+                        applyFilter.rate = { $gte: filter.range[0], $lte: filter.range[1] }
+                    }
+                    aggregateQuery.push({
+                        $match: {
+                            $and: [applyFilter]
+                        }
+                    })
+                }
+
+                if (filter && filter.price) {
+                    sort['price'] = parseInt(filter.price);
+                } else {
+                    sort = { created_at: 1 }
+                }
+                aggregateQuery.push({
+                    $sort: sort
+                })
+                aggregateQuery.push({
+                    $group: {
+                        _id: null,
+                        total_products: { $sum: 1 },
+                        products: {
+                            $push: {
+                                "_id": "$_id",
+                                "name": "$name",
+                                "type": "$type",
+                                "price": "$price",
+                                "description": "$description",
+                                "brand": "$brand",
+                                "image": { "$concat": [config.imgUrl + '/products/', "$image"] },
+                                "created_at": "$created_at",
+                                "updated_at": "$updated_at"
+                            }
+                        }
+                    }
+                })
+                nextCall(null, aggregateQuery)
+            },
+            (aggregateQuery, nextCall) => {
+                Product.aggregate(aggregateQuery).exec((err, list) => {
                     if (err) {
                         return nextCall(err)
                     }
-                    nextCall(null, products)
+                    list = list && list.length > 0 ? list[0] : { total_products: 0, products: [] }
+                    nextCall(null, list)
                 })
-            },
-            (products,nextCall)=>{
-                products.map(item=>{
-                    item.image = 'http://localhost:5000/uploads/products/' + item.image
-                })
-                nextCall(null,products)
             }
         ], (err, response) => {
             if (err) {
@@ -41,6 +91,7 @@ module.exports = {
                     if (err) {
                         return nextCall(err)
                     }
+                    product.image = config.imgUrl + '/products/' + product.image;
                     nextCall(null, product)
                 })
             }
