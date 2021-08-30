@@ -4,9 +4,11 @@ const UserController = require('../controllers/user')
 const ProductController = require('../controllers/product')
 const WishController = require('../controllers/wishlist')
 const CartController = require('../controllers/cart')
+const OrderController = require('../controllers/order')
 const isUserAuthenticated = require('../middlewares/userAuthenticated')
 const isUserPresent = require('../middlewares/isUserPresent')
 const Validation = require('../../../validations')
+const { User } = require('../../../models')
 
 
 router.all('/api/*',isUserAuthenticated,isUserPresent )
@@ -15,7 +17,9 @@ router.all('/api/*',isUserAuthenticated,isUserPresent )
 
 router.post('/auth/signup',Validation.signup(),UserController.signup)
 router.post('/auth/login',Validation.login(),UserController.login)
-
+router.post('/api/add_address',UserController.addAddress)
+router.get('/api/get_user_addresses',UserController.getAllUserAddress)
+router.put('/api/update_user_address',UserController.updateUserAddress)
 
 // Product routes
 
@@ -38,7 +42,9 @@ router.post('/api/empty_cart',CartController.emptyCart)
 router.post('/api/update_qty',CartController.updateProductQty)
 router.post('/api/move_to_wishlist',CartController.moveToWishlist)
 
+// order api's
 
+router.post('/auth/checkout',OrderController.payment)
 
 
 

@@ -13,6 +13,26 @@ module.exports = {
                 let applyFilter = {};
                 let sort = {};
                 let aggregateQuery = [];
+
+                if (req.body.search) {
+                    let regex = new RegExp(req.body.search, 'i')
+          
+                    let search = {
+                      $or: [
+                        {
+                          'name': regex
+                        },
+                        {
+                          'brand': regex
+                        }
+                      ]
+                    }
+          
+                    aggregateQuery.push({
+                      '$match': search
+                    })
+                  }
+
                 if (filter) {
                     if (filter.brands.length > 0) {
                         applyFilter.brand = { $in: filter.brands }
