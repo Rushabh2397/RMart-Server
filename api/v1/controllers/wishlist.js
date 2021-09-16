@@ -1,5 +1,5 @@
-const { Wishlist, Product } = require('../../../models')
 const async = require('async')
+const { Wishlist, Product, moveToCart, Cart } = require('../../../models')
 const wishlist = require('../../../models/wishlist')
 
 
@@ -107,7 +107,7 @@ module.exports = {
     /**
      * Api to get wishlist of the user.
      * @param {*} req 
-     */
+    */
     getWishlist: (req, res) => {
         async.waterfall([
             (nextCall) => {
@@ -142,7 +142,12 @@ module.exports = {
             })
         })
     },
+    
 
+    /**
+     * Api to move product to  user cart.
+     * @param {product_id} req 
+    */
     removeFromWishlist: (req, res) => {
         async.waterfall([
             (nextCall) => {
@@ -159,6 +164,13 @@ module.exports = {
                     if (err) {
                         return nextCall(err)
                     }
+                    if (updated) {
+                        updated.products.map(item => {
+                            item.image = 'http://localhost:5000/uploads/products/' + item.image
+                        })
+                    }
+
+
                     nextCall(null, updated)
                 })
             }
@@ -175,6 +187,105 @@ module.exports = {
                 data: response
             })
 
+        })
+    },
+
+    /**
+     * Api to move product to  user cart.
+     * @param {product_id} req 
+    */
+    moveToCart: (req, res) => {
+        async.waterfall([
+            (nextCall) => {
+                if (!req.body.product_id) {
+                    return nextCall({
+                        message: "Product id is required."
+                    })
+                }
+                nextCall(null, req.body)
+            },
+            (body, nextCall) => {
+                Product.findById(body.product_id, (err, product) => {
+                    if (err) {
+                        return nextCall(err)
+                    }
+                    nextCall(null, product)
+                })
+            },
+            (product, nextCall) => {
+                Cart.findOne({ user_id: req.user._id }, (err, cart) => {
+                    if (err) {
+                        return nextCall(err)
+                    }
+                    nextCall(null, cart, product)
+                })
+            },
+            (cart, product, nextCall) => {
+                let isProductInCart = cart.products.some((item) => item.id == product._id)
+                console.log("isProductInCart",isProductInCart)
+                if (!isProductInCart) {
+                    cart.products.push({
+                        _id: product._id,
+                        name: product.name,
+                        price: product.price,
+                        image: product.image,
+                        brand: product.brand,
+                        quantity: 1
+                    })
+
+                    Cart.findByIdAndUpdate(cart._id,{products:cart.products} ,(err, updatedCart) => {
+                        if (err) {
+                            return nextCall(err)
+                        }
+                        nextCall(null, product)
+                    })
+                } else {
+                    nextCall(null, product)
+                }
+            },
+            (product, nextCall) => {
+                Wishlist.findOne({ user_id: req.user._id }, (err, wishlist) => {
+                    if (err) {
+                        return nextCall(err)
+                    }
+                    //console.log("wishlist",wishlist)
+                    nextCall(null, wishlist, product)
+                })
+            },
+            (wishlist, product, nextCall) => {
+                let updatedWishlist = wishlist.products.filter(item => item._id.toString() !== product._id.toString())
+                Wishlist.findByIdAndUpdate(
+                    wishlist._id,
+                    {
+                        products: updatedWishlist
+                    },
+                    { new: true },
+                    (err, updatedUserWishlist) => {
+                        if (err) {
+                            return nextCall(err)
+                        }
+                        if (updatedUserWishlist) {
+                            updatedUserWishlist.products.map(item => {
+                                item.image = 'http://localhost:5000/uploads/products/' + item.image
+                            })
+                        }
+                        nextCall(null, updatedUserWishlist)
+                    }
+                )
+            }
+
+        ], (err, response) => {
+            if (err) {
+                return res.status(400).json({
+                    message: (err && err.message) || 'Oops! Failed to move product to cart.'
+                })
+            }
+
+            res.json({
+                status: 'success',
+                message: 'Product moved to cart.',
+                data: response
+            })
         })
     }
 }

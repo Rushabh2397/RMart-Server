@@ -8,14 +8,14 @@ const OrderController = require('../controllers/order')
 const isUserAuthenticated = require('../middlewares/userAuthenticated')
 const isUserPresent = require('../middlewares/isUserPresent')
 const Validation = require('../../../validations')
-const { User } = require('../../../models')
+const { User, Order } = require('../../../models')
 
 
 router.all('/api/*',isUserAuthenticated,isUserPresent )
 
 // User routes
 
-router.post('/auth/signup',Validation.signup(),UserController.signup)
+router.post('/auth/signup',UserController.signup)
 router.post('/auth/login',Validation.login(),UserController.login)
 router.post('/api/add_address',UserController.addAddress)
 router.get('/api/get_user_addresses',UserController.getAllUserAddress)
@@ -32,6 +32,7 @@ router.post('/auth/get_product',ProductController.getProduct)
 router.post('/api/add_to_wishlist',WishController.addToWishlist)
 router.get('/api/get_user_wishlist',WishController.getWishlist)
 router.post('/api/remove_from_wishlist',WishController.removeFromWishlist)
+router.put('/api/move_to_cart',WishController.moveToCart)
 
 // Cart routes
 
@@ -45,7 +46,8 @@ router.post('/api/move_to_wishlist',CartController.moveToWishlist)
 // order api's
 
 router.post('/auth/checkout',OrderController.payment)
-
+router.post('/api/place_order',OrderController.placeOrder)
+router.get('/api/get_user_all_orders',OrderController.getUserAllOrders)
 
 
 

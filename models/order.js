@@ -1,11 +1,14 @@
 const { Schema, model } = require('mongoose')
 const moment = require('moment');
-const { encrypt } = require('../utils/encryDecry')
 
 
-const cartSchema = new Schema({
+
+const orderSchema = new Schema({
 
     user_id: {
+        type: Schema.Types.ObjectId
+    },
+    order_id:{
         type: Schema.Types.ObjectId
     },
     products: [{
@@ -33,9 +36,21 @@ const cartSchema = new Schema({
     },
     total_cart_value:{
         type: Number
+    },
+    created_at:{
+        type: Date
+    },
+    shipping_address:{
+        type: Object
     }
-}, { collection: 'cart' })
+}, { collection: 'order' })
 
 
+orderSchema.pre('save', function (next) {
+    let order = this;
+    order.created_at = moment().unix() * 1000;
+    next()
+})
 
-module.exports = model(cartSchema.options.collection, cartSchema)
+
+module.exports = model(orderSchema.options.collection, orderSchema)

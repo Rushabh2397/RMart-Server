@@ -10,9 +10,11 @@ module.exports = {
      * @param {name,email,password} req 
     */
     signup: (req, res) => {
+        console.log("req.body",req.body)
         async.waterfall([
             (nextCall) => {
                 const errors = validationResult(req);
+                console.log("err",errors)
                 if (!errors.isEmpty()) {
                     return nextCall(errors[0].errors.msg)
                 }
