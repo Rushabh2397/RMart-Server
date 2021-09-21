@@ -1,7 +1,7 @@
 const async = require('async');
 const { User, Address } = require('../../../models');
 const { validationResult } = require('express-validator');
-const { decrypt } = require('../../../utils/encryDecry')
+const { decrypt, encrypt } = require('../../../utils/encryDecry')
 const jwt = require('jsonwebtoken')
 
 module.exports = {
@@ -10,11 +10,11 @@ module.exports = {
      * @param {name,email,password} req 
     */
     signup: (req, res) => {
-        console.log("req.body",req.body)
+        console.log("req.body", req.body)
         async.waterfall([
             (nextCall) => {
                 const errors = validationResult(req);
-                console.log("err",errors)
+                console.log("err", errors)
                 if (!errors.isEmpty()) {
                     return nextCall(errors[0].errors.msg)
                 }
@@ -204,16 +204,16 @@ module.exports = {
                         state: body.state,
                         country: body.country
                     },
-                    {new:true},
-                    (err,updatedAddress)=>{
-                        if(err){
+                    { new: true },
+                    (err, updatedAddress) => {
+                        if (err) {
                             return nextCall(err)
                         }
-                        nextCall(null,updatedAddress)
+                        nextCall(null, updatedAddress)
                     }
                 )
             }
-        ], (err, response) => { 
+        ], (err, response) => {
             if (err) {
                 return res.status(400).json({
                     message: (err && err.message) || 'Oops! Failed to update address.'
@@ -223,6 +223,96 @@ module.exports = {
             res.json({
                 status: 'success',
                 message: 'Address updated successfully.',
+                data: response
+            })
+        })
+    },
+
+    /**
+     * 
+     * @param {newPassword,password} req 
+    */
+    changePassword: (req, res) => {
+        console.log("Password",req.body)
+        async.waterfall([
+            (nextCall) => {
+                if (!req.body.newPassword || !req.body.password) {
+                    return nextCall({
+                        message: 'All fileds are required.'
+                    })
+                }
+                nextCall(null, req.body)
+            },
+            (body, nextCall) => {
+                User.findById(req.user._id, (err, user) => {
+                    if (err) {
+                        return nextCall(err)
+                    }
+                    nextCall(null, body, user)
+                })
+            },
+            (body, user, nextCall) => {
+                let passwordMatched = decrypt(body.password, user.password)
+                let newPassword = encrypt(body.newPassword)
+                if (passwordMatched) {
+                    User.findByIdAndUpdate(user._id, { password: newPassword }, (err, updatedUser) => {
+                        if (err) {
+                            return nextCall(err)
+                        }
+                        nextCall(null, null)
+                    })
+                } else {
+                    nextCall({
+                        message: "Your old password doesn't match."
+                    })
+                }
+            }
+        ], (err, response) => {
+            if (err) {
+                return res.status(400).json({
+                    message: (err && err.message) || 'Oops! Failed to update password.'
+                })
+            }
+
+            res.json({
+                status: 'success',
+                message: 'Password updated successfully.'
+            })
+        })
+    },
+    
+    /**
+     * 
+     * @param {name,email,mobile} req
+    */
+    updateProfile: (req, res) => {
+        async.waterfall([
+            (nextCall) => {
+                User.findByIdAndUpdate(
+                    req.user._id,
+                    {
+                        name: req.body.name,
+                        email: req.body.email,
+                        mobile: req.body.mobile
+                    },
+                    (err, updatedUser) => {
+                        if (err) {
+                            return nextCall(err)
+                        }
+                        nextCall(null, updatedUser)
+                    }
+                )
+            }
+        ], (err, response) => {
+            if (err) {
+                return res.status(400).json({
+                    message: (err && err.message) || 'Oops! Failed to update user details.'
+                })
+            }
+
+            res.json({
+                status: 'success',
+                message: 'Profile updated successfully.',
                 data: response
             })
         })

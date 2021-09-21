@@ -1,4 +1,4 @@
-const { Cart, Order, Address } = require('../../../models')
+const { User, Cart, Order, Address } = require('../../../models')
 const async = require('async')
 const config = require('../../../config')
 const stripe = require('stripe')('sk_test_51JT841SA7j2p5dnv0YqVWSjwkZP8ba8i7PaCGg7YE1N73rzGo10pFM7mWFxX30waN374RAnnuzTOBbtMHksCudAX00oVCFzvN5');
@@ -7,16 +7,24 @@ const { v4: uuidv4 } = require('uuid');
 
 
 
-module.exports = {
+let _self = {
 
   payment: (req, res) => {
+    console.log("req",req.body)
     async.waterfall([
-      async (nextCall) => {
+      async () => {
         try {
-          console.log("here", req.body)
+          let user = await User.findById(req.user._id)
+          console.log("user",user)
+          let address = await Address.findById(req.body.address_id)
+          if(!address){
+            return res.status(400).json({
+              message :'Something went wrong!!!'
+            })
+          }
           const customer = await stripe.customers.create({
-            email: 'energy1@yopmail.com',
-            source: req.body.id,
+            email: user.email,
+            source: req.body.token.id,
             // name: 'Jenny Rosen',
             // address: {
             // line1: '510 Townsend St',
@@ -27,7 +35,7 @@ module.exports = {
             // }
           });
           if (customer) {
-            return customer
+            return [req.body, customer,user,address]
           }
         } catch (error) {
           console.log(error)
@@ -35,22 +43,24 @@ module.exports = {
         }
 
       },
-      async (customer) => {
+      async ([body, customer,user,address],nextCall) => {
+        console.log("body",body,customer)
         try {
           let charge = await stripe.charges.create({
-            amount: 30 * 100,
+            amount: parseInt(body.amount)*100 ,
             currency: 'INR',
             customer: customer.id,
             // customerName:"energy",
             shipping: {
-              name: "energy",
+              name: user.name,
               address: {
-                country: req.body.card.country
+                country:body.token.card.country
               }
             },
-            description: 'Rollex'
+            //description: 'Rollex'
           }, { idempotencyKey: uuidv4() })
           if (charge) {
+            _self.placeOrder(user,address)
             return res.json({
               status: 'success',
               message: "Payment success",
@@ -58,7 +68,10 @@ module.exports = {
             })
           }
         } catch (error) {
-          console.log("err", error)
+          console.log("err",error)
+          return res.status(400).json({
+            message : 'Something went wrong!!!'
+          })
         }
 
       }
@@ -68,38 +81,38 @@ module.exports = {
 
   /**
    * Api to place user's order.
-   * @param {address_id} req 
+   * @param {address} 
    */
-  placeOrder: (req, res) => {
+  placeOrder: (user,address) => {
     async.waterfall([
+      // (nextCall) => {
+      //   if (!req.body.address_id) {
+      //     return nextCall({
+      //       message: 'Address id is required.'
+      //     })
+      //   }
+      //   nextCall(null, req.body)
+      // },
       (nextCall) => {
-        if (!req.body.address_id) {
-          return nextCall({
-            message: 'Address id is required.'
-          })
-        }
-        nextCall(null, req.body)
-      },
-      (body, nextCall) => {
-        Cart.findOne({ user_id: req.user._id }, (err, cart) => {
+        Cart.findOne({ user_id: user._id }, (err, cart) => {
           if (err) {
             return nextCall(err)
           }
-          nextCall(null, body, cart)
+          nextCall(null,cart)
         })
       },
-      (body, cart, nextCall) => {
-        Address.findById(body.address_id, (err, address) => {
-          if (err) {
-            return nextCall(err)
-          }
-          nextCall(null, cart, address)
-        })
-      },
-      (cart, address, nextCall) => {
+      // (body, cart, nextCall) => {
+      //   Address.findById(body.address_id, (err, address) => {
+      //     if (err) {
+      //       return nextCall(err)
+      //     }
+      //     nextCall(null, cart, address)
+      //   })
+      // },
+      (cart,  nextCall) => {
         let order = new Order({
           order_id: uuidv4(),
-          user_id: req.user._id,
+          user_id: user._id,
           products: cart.products,
           shipping_address: address,
           products_in_cart: cart.products_in_cart,
@@ -108,23 +121,24 @@ module.exports = {
 
         order.save((err, orderInfo) => {
           if (err) {
+            console.log("err",err)
             return nextCall(err)
           }
-          nextCall(null, orderInfo)
+          nextCall(null, null)
         })
       }
 
     ], (err, response) => {
-      if (err) {
-        return res.status(400).json({
-          message: (err && err.message) || 'Oops! Failed to place order.'
-        })
-      }
-      res.json({
-        status: 'success',
-        message: 'Order placed successfully.',
-        data: response
-      })
+      // if (err) {
+      //   return res.status(400).json({
+      //     message: (err && err.message) || 'Oops! Failed to place order.'
+      //   })
+      // }
+      // res.json({
+      //   status: 'success',
+      //   message: 'Order placed successfully.',
+      //   data: response
+      // })
     })
   },
 
@@ -154,7 +168,7 @@ module.exports = {
       })
     })
   },
-  
+
   /**
    * Api to get a specific order detail.
    * @param {orderId} req  
@@ -178,17 +192,19 @@ module.exports = {
         })
       }
     ], (err, response) => {
-        if(err){
-          return res.status(400).json({
-            message : ( err && er.message ) || 'Oops! Failed to get order detail.'
-          })
-        }
-
-        res.json({
-          status : 'success',
-          message : 'Order detail.',
-          data : response
+      if (err) {
+        return res.status(400).json({
+          message: (err && er.message) || 'Oops! Failed to get order detail.'
         })
+      }
+
+      res.json({
+        status: 'success',
+        message: 'Order detail.',
+        data: response
+      })
     })
   }
 }
+
+module.exports = _self

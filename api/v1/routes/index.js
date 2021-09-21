@@ -20,6 +20,8 @@ router.post('/auth/login',Validation.login(),UserController.login)
 router.post('/api/add_address',UserController.addAddress)
 router.get('/api/get_user_addresses',UserController.getAllUserAddress)
 router.put('/api/update_user_address',UserController.updateUserAddress)
+router.put('/api/change_password',UserController.changePassword)
+router.put('/api/update_profile',UserController.updateProfile)
 
 // Product routes
 
@@ -45,7 +47,7 @@ router.post('/api/move_to_wishlist',CartController.moveToWishlist)
 
 // order api's
 
-router.post('/auth/checkout',OrderController.payment)
+router.post('/api/checkout',OrderController.payment)
 router.post('/api/place_order',OrderController.placeOrder)
 router.get('/api/get_user_all_orders',OrderController.getUserAllOrders)
 

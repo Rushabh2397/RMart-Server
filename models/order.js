@@ -9,7 +9,7 @@ const orderSchema = new Schema({
         type: Schema.Types.ObjectId
     },
     order_id:{
-        type: Schema.Types.ObjectId
+        type: String
     },
     products: [{
         _id: {
