@@ -17,6 +17,9 @@ const userSchema = new Schema({
     password: {
         type: String
     },
+    stripe_id:{
+       type: String
+    },
     created_at: {
         type: Date
     },

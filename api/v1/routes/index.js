@@ -48,9 +48,8 @@ router.post('/api/move_to_wishlist',CartController.moveToWishlist)
 // order api's
 
 router.post('/api/checkout',OrderController.payment)
-router.post('/api/place_order',OrderController.placeOrder)
 router.get('/api/get_user_all_orders',OrderController.getUserAllOrders)
-
+router.post('/api/get_order_detail',OrderController.getOrderDetail)
 
 
 
