@@ -1,7 +1,7 @@
 const async = require('async')
 const { Wishlist, Product, moveToCart, Cart } = require('../../../models')
 const wishlist = require('../../../models/wishlist')
-
+const config = require('../../../config')
 
 module.exports = {
 
@@ -121,7 +121,7 @@ module.exports = {
             (wishlist, nextCall) => {
                 if (wishlist) {
                     wishlist.products.map(item => {
-                        item.image = 'http://localhost:5000/uploads/products/' + item.image
+                        item.image = config.imgUrl+'/products/' + item.image
                     })
                 } else {
                     wishlist = []
@@ -166,7 +166,7 @@ module.exports = {
                     }
                     if (updated) {
                         updated.products.map(item => {
-                            item.image = 'http://localhost:5000/uploads/products/' + item.image
+                            item.image = config.imgUrl+'/products/' + item.image
                         })
                     }
 
@@ -264,7 +264,7 @@ module.exports = {
                         }
                         if (updatedUserWishlist) {
                             updatedUserWishlist.products.map(item => {
-                                item.image = 'http://localhost:5000/uploads/products/' + item.image
+                                item.image = config.imgUrl+'/products/' + item.image
                             })
                         }
                         nextCall(null, updatedUserWishlist)
