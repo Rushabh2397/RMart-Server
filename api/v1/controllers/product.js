@@ -73,6 +73,7 @@ module.exports = {
                                 "description": "$description",
                                 "brand": "$brand",
                                 "image": { "$concat": [config.imgUrl + '/products/', "$image"] },
+                                "discount" : "$discount",
                                 "created_at": "$created_at",
                                 "updated_at": "$updated_at"
                             }

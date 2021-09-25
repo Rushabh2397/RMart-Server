@@ -409,7 +409,6 @@ module.exports = {
             }
         ], (err, response) => {
             if (err) {
-                console.log("err", err)
                 return res.status(400).json({
                     message: (err && err.message) || 'Oops! Failed to move product to wishlist.'
                 })

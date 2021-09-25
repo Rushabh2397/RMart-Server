@@ -10,11 +10,9 @@ module.exports = {
      * @param {name,email,password} req 
     */
     signup: (req, res) => {
-        console.log("req.body", req.body)
         async.waterfall([
             (nextCall) => {
                 const errors = validationResult(req);
-                console.log("err", errors)
                 if (!errors.isEmpty()) {
                     return nextCall(errors[0].errors.msg)
                 }
@@ -233,7 +231,6 @@ module.exports = {
      * @param {newPassword,password} req 
     */
     changePassword: (req, res) => {
-        console.log("Password",req.body)
         async.waterfall([
             (nextCall) => {
                 if (!req.body.newPassword || !req.body.password) {

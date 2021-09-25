@@ -27,6 +27,9 @@ const productSchema = new Schema({
         type: String,
         enum : ['Male','Female','Unisex']
     },
+    discount:{
+       type: Number
+    },
     updated_at: {
         type: Date
     }

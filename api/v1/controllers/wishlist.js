@@ -38,13 +38,12 @@ module.exports = {
             },
             (wishlist, product, nextCall) => {
                 if (wishlist) {
-                    wishlist.products.map(item => {
-                        if (item._id === product._id) {
-                            return nextCall({
-                                message: 'Product already exist in wishlist.'
-                            })
-                        }
-                    })
+
+                    if (wishlist.products.some(itm => itm._id.toString() == product._id.toString())) {
+                        return nextCall({
+                            message: 'Product already exist in wishlist.'
+                        })
+                    }
 
                     wishlist.products.push({
                         _id: product._id,
@@ -109,6 +108,7 @@ module.exports = {
      * @param {*} req 
     */
     getWishlist: (req, res) => {
+        console.log("inside wishlist")
         async.waterfall([
             (nextCall) => {
                 Wishlist.findOne({ user_id: req.user._id }, (err, wishlist) => {
@@ -142,7 +142,7 @@ module.exports = {
             })
         })
     },
-    
+
 
     /**
      * Api to move product to  user cart.
@@ -222,7 +222,6 @@ module.exports = {
             },
             (cart, product, nextCall) => {
                 let isProductInCart = cart.products.some((item) => item.id == product._id)
-                console.log("isProductInCart",isProductInCart)
                 if (!isProductInCart) {
                     cart.products.push({
                         _id: product._id,
@@ -233,7 +232,7 @@ module.exports = {
                         quantity: 1
                     })
 
-                    Cart.findByIdAndUpdate(cart._id,{products:cart.products} ,(err, updatedCart) => {
+                    Cart.findByIdAndUpdate(cart._id, { products: cart.products }, (err, updatedCart) => {
                         if (err) {
                             return nextCall(err)
                         }
@@ -248,7 +247,6 @@ module.exports = {
                     if (err) {
                         return nextCall(err)
                     }
-                    //console.log("wishlist",wishlist)
                     nextCall(null, wishlist, product)
                 })
             },

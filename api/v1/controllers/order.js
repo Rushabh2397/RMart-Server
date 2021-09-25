@@ -254,7 +254,6 @@ let _self = {
    * Api to get list of user's order.
   */
   getUserAllOrders: (req, res) => {
-    console.log("getUserAllOrders")
     async.waterfall([
       (nextCall) => {
         Order.find({ user_id: req.user._id }).sort({created_at:-1}).lean().exec((err, orders) => {
@@ -268,7 +267,6 @@ let _self = {
         orders.map(order=>{
           order.created_at = moment(order.created_at).format("dddd, MMMM Do YYYY")
         })
-        console.log("orders",orders)
         nextCall(null, orders)
       }
     ], (err, response) => {
