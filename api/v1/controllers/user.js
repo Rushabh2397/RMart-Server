@@ -284,6 +284,19 @@ module.exports = {
     */
     updateProfile: (req, res) => {
         async.waterfall([
+            (nextCall)=>{
+                User.findOne({_id:{$ne:req.user._id},email:req.body.email},(err,user)=>{
+                    if(err){
+                        return nextCall(err)
+                    } else if(user){
+                        return nextCall({
+                            message : 'User with these email id already exist.'
+                        })
+                    } else{
+                        nextCall()
+                    }
+                })
+            },
             (nextCall) => {
                 User.findByIdAndUpdate(
                     req.user._id,

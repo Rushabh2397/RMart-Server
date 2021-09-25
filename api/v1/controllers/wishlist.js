@@ -108,7 +108,6 @@ module.exports = {
      * @param {*} req 
     */
     getWishlist: (req, res) => {
-        console.log("inside wishlist")
         async.waterfall([
             (nextCall) => {
                 Wishlist.findOne({ user_id: req.user._id }, (err, wishlist) => {
