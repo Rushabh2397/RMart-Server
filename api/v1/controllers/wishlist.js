@@ -230,8 +230,7 @@ module.exports = {
                         brand: product.brand,
                         quantity: 1
                     })
-                    let products_in_cart = cart.products_in_cart + 1 ;
-                    Cart.findByIdAndUpdate(cart._id, { products: cart.products,products_in_cart:products_in_cart }, (err, updatedCart) => {
+                    Cart.findByIdAndUpdate(cart._id, { products: cart.products,products_in_cart:cart.products.length }, (err, updatedCart) => {
                         if (err) {
                             return nextCall(err)
                         }
