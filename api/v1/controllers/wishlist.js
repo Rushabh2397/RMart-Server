@@ -120,7 +120,7 @@ module.exports = {
             (wishlist, nextCall) => {
                 if (wishlist) {
                     wishlist.products.map(item => {
-                        item.image = config.imgUrl+'/products/' + item.image
+                        item.image = config.imgUrl + '/products/' + item.image
                     })
                 } else {
                     wishlist = []
@@ -165,7 +165,7 @@ module.exports = {
                     }
                     if (updated) {
                         updated.products.map(item => {
-                            item.image = config.imgUrl+'/products/' + item.image
+                            item.image = config.imgUrl + '/products/' + item.image
                         })
                     }
 
@@ -220,24 +220,49 @@ module.exports = {
                 })
             },
             (cart, product, nextCall) => {
-                let isProductInCart = cart.products.some((item) => item.id == product._id)
+                let isProductInCart = cart ? cart.products.some((item) => item.id == product._id) : false;
                 if (!isProductInCart) {
-                    cart.products.push({
-                        _id: product._id,
-                        name: product.name,
-                        price: product.price,
-                        image: product.image,
-                        brand: product.brand,
-                        quantity: 1
-                    })
-                    Cart.findByIdAndUpdate(cart._id, { products: cart.products,products_in_cart:cart.products.length }, (err, updatedCart) => {
-                        if (err) {
-                            return nextCall(err)
-                        }
-                        nextCall(null, product)
-                    })
+                    if (cart) {
+                        cart.products.push({
+                            _id: product._id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image,
+                            brand: product.brand,
+                            quantity: 1
+                        })
+                        Cart.findByIdAndUpdate(cart._id, { products: cart.products, products_in_cart: cart.products.length }, (err, updatedCart) => {
+                            if (err) {
+                                return nextCall(err)
+                            }
+                            nextCall(null, product)
+                        })
+                    } else {
+                        let newCart = new Cart({
+                            user_id: req.user._id,
+                            products: [{
+                                _id: product._id,
+                                name: product.name,
+                                price: product.price,
+                                image: product.image,
+                                brand: product.brand,
+                                quantity: 1
+                            }],
+                            products_in_cart: 1,
+                            total_cart_value: product.price
+                        })
+
+                        newCart.save((err, userCart) => {
+                            if (err) {
+                                return nextCall(err)
+                            }
+                            nextCall(null, product)
+                        })
+                    }
+
                 } else {
                     nextCall(null, product)
+
                 }
             },
             (product, nextCall) => {
@@ -262,7 +287,7 @@ module.exports = {
                         }
                         if (updatedUserWishlist) {
                             updatedUserWishlist.products.map(item => {
-                                item.image = config.imgUrl+'/products/' + item.image
+                                item.image = config.imgUrl + '/products/' + item.image
                             })
                         }
                         nextCall(null, updatedUserWishlist)
