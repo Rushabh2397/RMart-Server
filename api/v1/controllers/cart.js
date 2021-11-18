@@ -345,22 +345,52 @@ module.exports = {
                 })
             },
             (body, wishlist, nextCall) => {
-                let isExist = wishlist.products.some(item => item._id == body.product_id);
+                let isExist = wishlist ? wishlist.products.some(item => item._id == body.product_id) : false;
                 if (!isExist) {
-                    Product.findById(body.product_id, (err, product) => {
-                        if (err) {
-                            return nextCall(err)
-                        }
-                        wishlist.products.push({
-                            _id: product._id,
-                            name: product.name,
-                            price: product.price,
-                            description: product.description,
-                            image: product.image,
-                            brand: product.brand
+                    if (wishlist) {
+                        Product.findById(body.product_id, (err, product) => {
+                            if (err) {
+                                return nextCall(err)
+                            }
+                            wishlist.products.push({
+                                _id: product._id,
+                                name: product.name,
+                                price: product.price,
+                                description: product.description,
+                                image: product.image,
+                                brand: product.brand
+                            })
+                            nextCall(null, body, wishlist)
                         })
-                        nextCall(null, body, wishlist)
-                    })
+                    } else {
+                        Product.findById(body.product_id, (err, product) => {
+                            if (err) {
+                                return nextCall(err)
+                            }
+                            let products = {
+                                _id: product._id,
+                                name: product.name,
+                                price: product.price,
+                                description: product.description,
+                                image: product.image,
+                                brand: product.brand
+                            }
+                            let newWishlist = new Wishlist({
+                                user_id: req.user._id,
+                                products:products
+                            })
+
+                            newWishlist.save((err, data) => {
+                                if (err) {
+                                    return nextCall(err)
+                                }
+                                nextCall(null, body, null)
+                            })
+                        })
+
+
+                    }
+
 
                 } else {
                     nextCall(null, body, wishlist)
@@ -368,12 +398,17 @@ module.exports = {
 
             },
             (body, wishlist, nextCall) => {
-                Wishlist.findByIdAndUpdate(wishlist._id, { products: wishlist.products }, (err, updatedWishlist) => {
-                    if (err) {
-                        return nextCall(err)
-                    }
-                    nextCall(null,body)
-                })
+                if (wishlist) {
+                    Wishlist.findByIdAndUpdate(wishlist._id, { products: wishlist.products }, (err, updatedWishlist) => {
+                        if (err) {
+                            return nextCall(err)
+                        }
+                        nextCall(null, body)
+                    })
+                } else {
+                    nextCall(null, body)
+                }
+
             },
             (body, nextCall) => {
                 Cart.findOne({ user_id: req.user._id }, (err, cart) => {
