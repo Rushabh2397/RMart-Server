@@ -231,7 +231,8 @@ module.exports = {
                             brand: product.brand,
                             quantity: 1
                         })
-                        Cart.findByIdAndUpdate(cart._id, { products: cart.products, products_in_cart: cart.products.length }, (err, updatedCart) => {
+                        let total_cart_value = parseInt(cart.total_cart_value) + parseInt(product.price);
+                        Cart.findByIdAndUpdate(cart._id, { products: cart.products, products_in_cart: cart.products.length,total_cart_value:total_cart_value }, (err, updatedCart) => {
                             if (err) {
                                 return nextCall(err)
                             }
