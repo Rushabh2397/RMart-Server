@@ -32,6 +32,7 @@ module.exports = {
                 })
             },
             (body, nextCall) => {
+                body.email = body.email.toLowerCase()
                 let newUser = new User(body);
                 newUser.save((err, user) => {
                     if (err) {
@@ -67,6 +68,7 @@ module.exports = {
                 nextCall(null, req.body)
             },
             (body, nextCall) => {
+                body.email = body.email.toLowerCase()
                 User.findOne({ email: body.email }, (err, user) => {
                     if (err) {
                         return nextCall(err)
