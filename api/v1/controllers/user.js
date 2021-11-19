@@ -16,6 +16,7 @@ module.exports = {
                 if (!errors.isEmpty()) {
                     return nextCall(errors[0].errors.msg)
                 }
+                req.body.email = req.body.email.toLowerCase()
                 nextCall(null, req.body)
             },
             (body, nextCall) => {
@@ -32,7 +33,6 @@ module.exports = {
                 })
             },
             (body, nextCall) => {
-                body.email = body.email.toLowerCase()
                 let newUser = new User(body);
                 newUser.save((err, user) => {
                     if (err) {
@@ -65,10 +65,10 @@ module.exports = {
                 if (!errors.isEmpty()) {
                     return nextCall(errors[0].errors.msg)
                 }
+                req.body.email = req.body.email.toLowerCase();
                 nextCall(null, req.body)
             },
             (body, nextCall) => {
-                body.email = body.email.toLowerCase()
                 User.findOne({ email: body.email }, (err, user) => {
                     if (err) {
                         return nextCall(err)
