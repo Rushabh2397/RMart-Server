@@ -5,6 +5,7 @@ const ProductController = require('../controllers/product')
 const WishController = require('../controllers/wishlist')
 const CartController = require('../controllers/cart')
 const OrderController = require('../controllers/order')
+const DemoController = require('../controllers/demo')
 const isUserAuthenticated = require('../middlewares/userAuthenticated')
 const isUserPresent = require('../middlewares/isUserPresent')
 const Validation = require('../../../validations')
@@ -50,6 +51,10 @@ router.post('/api/move_to_wishlist',CartController.moveToWishlist)
 router.post('/api/checkout',OrderController.payment)
 router.get('/api/get_user_all_orders',OrderController.getUserAllOrders)
 router.post('/api/get_order_detail',OrderController.getOrderDetail)
+
+// Demo api
+
+router.post('/auth/convert_roman_to_integer',DemoController.convertRomanToInteger)
 
 
 
